@@ -24,6 +24,7 @@ import org.apache.kafka.connect.components.Versioned;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -135,6 +136,7 @@ public abstract class Connector implements Versioned {
      * the current configuration values.
      */
     public Config validate(Map<String, String> connectorConfigs) {
+        validateConfigDoesNotContainNull(connectorConfigs);
         ConfigDef configDef = config();
         if (null == configDef) {
             throw new ConnectException(
@@ -150,4 +152,15 @@ public abstract class Connector implements Versioned {
      * @return The ConfigDef for this connector; may not be null.
      */
     public abstract ConfigDef config();
+
+    private void validateConfigDoesNotContainNull(Map<String, String> connectorConfigs) {
+        final String keysWithNullValue = connectorConfigs.entrySet().stream()
+                .filter(entry -> entry.getValue() == null)
+                .map(Map.Entry::getKey)
+                .collect(Collectors.joining(", "));
+
+        if (!keysWithNullValue.isEmpty()) {
+            throw new ConnectException(String.format("Null value found in config for key(s) %s", keysWithNullValue));
+        }
+    }
 }
