@@ -30,7 +30,6 @@ import org.apache.kafka.connect.connector.policy.AllConnectorClientConfigOverrid
 import org.apache.kafka.connect.connector.policy.ConnectorClientConfigOverridePolicy;
 import org.apache.kafka.connect.connector.policy.NoneConnectorClientConfigOverridePolicy;
 import org.apache.kafka.connect.connector.policy.PrincipalConnectorClientConfigOverridePolicy;
-import org.apache.kafka.connect.errors.ConnectException;
 import org.apache.kafka.connect.runtime.distributed.ClusterConfigState;
 import org.apache.kafka.connect.runtime.isolation.PluginDesc;
 import org.apache.kafka.connect.runtime.isolation.Plugins;
@@ -299,11 +298,30 @@ public class AbstractHerderTest {
         config.put(ConnectorConfig.CONNECTOR_CLASS_CONFIG, TestSourceConnector.class.getName());
         config.put("testKey", null);
 
-        Exception exception = assertThrows(ConnectException.class,
+        Exception exception = assertThrows(IllegalArgumentException.class,
                 () -> herder.validateConnectorConfig(config, false)
         );
 
         assertTrue(exception.getMessage().contains("testKey"));
+        verifyAll();
+    }
+
+    @Test
+    public void testConfigValidationMultipleNullConfig() {
+        AbstractHerder herder = createConfigValidationHerder(TestSourceConnector.class, noneConnectorClientConfigOverridePolicy);
+        replayAll();
+
+        Map<String, String> config = new HashMap<>();
+        config.put(ConnectorConfig.CONNECTOR_CLASS_CONFIG, TestSourceConnector.class.getName());
+        config.put("testKey", null);
+        config.put("secondTestKey", null);
+
+        Exception exception = assertThrows(IllegalArgumentException.class,
+                () -> herder.validateConnectorConfig(config, false)
+        );
+
+        assertTrue(exception.getMessage().contains("testKey"));
+        assertTrue(exception.getMessage().contains("secondTestKey"));
         verifyAll();
     }
 

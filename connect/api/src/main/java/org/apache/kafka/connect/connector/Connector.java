@@ -160,7 +160,7 @@ public abstract class Connector implements Versioned {
                 .collect(Collectors.joining(", "));
 
         if (!keysWithNullValue.isEmpty()) {
-            throw new ConnectException(String.format("Null value found in config for key(s) %s", keysWithNullValue));
+            throw new IllegalArgumentException(String.format("Null value found in config for key(s) %s", keysWithNullValue));
         }
     }
 }
